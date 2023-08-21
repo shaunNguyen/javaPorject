@@ -1,0 +1,48 @@
+MongoDB tutorial:
+-----------------
+refer: https://www.w3schools.com/mongodb/
+
+MongoDB is a document database. It stores data in a type of JSON format call BSON.
+A record in MongoDB is a document, which is a data structure composed of key value pairs similar to the structure of JSON objects.
+
+A MongoDB Document: 
+Records in a MongoDB database are called documents, and the field values may include numbers, strings, booleans, arrays, or even nested documents.
+
+MongoDB Install:
+----------------
+ sudo apt update
+ sudo apt install mongodb-org
+ sudo systemctl start mongod.service
+ sudo systemctl status mongod
+ sudo systemctl enable mongod
+ mongo --eval 'db.runCommand({ connectionStatus: 1 })'
+
+quang18@quang18:~$ sudo systemctl enable mongod
+Created symlink /etc/systemd/system/multi-user.target.wants/mongod.service → /lib/systemd/system/mongod.service.
+
+quang18@quang18:~$ mongo
+> use record
+switched to db record
+>  db.users.insert({username: "myname", password: "mypassword"})
+WriteResult({ "nInserted" : 1 })
+>
+>  db.users.find()
+{ "_id" : ObjectId("63f4915b21445d6509c97a7d"), "username" : "myname", "password" : "mypassword" }
+>
+> db.commerce.save({scriptname: "dygraph.min.js", version: "2.1.0"})
+WriteResult({ "nInserted" : 1 })
+>
+>
+> db.users.find()
+{ "_id" : ObjectId("63f4915b21445d6509c97a7d"), "username" : "myname", "password" : "mypassword" }
+>
+> show collections
+commerce
+users
+>
+> db.commerce.find()
+{ "_id" : ObjectId("63f491ff21445d6509c97a7e"), "scriptname" : "dygraph.min.js", "version" : "2.1.0" }
+>
+> exit
+bye
+

@@ -1,0 +1,40 @@
+Spring Boot Integration with MongoDB Tutoriak :
+-----------------------------------------------
+
+MongoDB Model Implementation:
+@Document - to set the collection name that will be used by the model
+@Id - The MongoDB document's primary key _id
+super(): Yes. super(...) will invoke the constructor of the super-class.
+https://stackoverflow.com/questions/3767365/super-in-java
+
+Spring Boot MongoDB API Implementation:
+The API implementation happends in the repository. It acts as a link between the model and the database, and has all the methods for CRUD op.
+The first method, findItemByName, requires a parameter for the query by.
+	@Query 
+The second method, uses the category field to get all the items of a particular category, we only want to project the field's name and quantity in the query response, so we set those fields to 1
+
+MongoDB and Spring Boot CRUD Examples:
+To connect to MongoDB Atlas, we specify the connection string in the application.properties
+In this Spring Boot MongoDB example, we are not using the Controller and the View. 
+We will use a CommandLineRunner to view the output on the console.
+Crate the main class Mdb*.java:
+	.implement the CommandLineRunner to run the spring application
+	.ItemRepository: is Autowired, allowing Spring to find it automatically.
+	.Spring intializes the Application Context using the @SpringBootApplication annotation
+	.We also activate the Mongo Repositories using @EnableMongoRepositories
+
+Create operation using Spring Boot MongoDB:
+In order to create new documents, we will use the save method. 
+The save method is available to us through the SimpleMongoRepository class. 
+	groceryItemRepo.save(new GroceryItem("id", "name", quantity, "category"); 
+
+Read operation using Spring Boot MongoDB:
+4 different read operations:
+	.fetch all the document (grocery items) using findAll()
+	.get a single item (document) by its name field using the findItemByName()
+	.get a list of items based on a category
+	.get the count of items
+
+Update op using Spring Boot MongoDB:
+
+Delete operation
