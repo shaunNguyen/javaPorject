@@ -1,0 +1,134 @@
+1. Create a new maven project
+If you haven’t already, install OpenJDK on your system, after which you can install maven.
+mvn -B archetype:generate -DgroupId=com.quangn -DartifactId=mvn-kafka -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4
+mvn -B archetype:generate -DgroupId=com.quangn -DartifactId=mvn-kafka -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.4
+
+quang20@quang20:~/training/a-service/mvn-kafka$ tree
+.
+├── pom.xml
+└── src
+    ├── main
+    │   └── java
+    │       └── com
+    │           └── quangn
+    │               └── App.java
+    └── test
+        └── java
+            └── com
+                └── quangn
+                    └── AppTest.java
+9 directories, 3 files
+
+2. Compiling our JAR File
+Before running a Java application in production, we'll need to compile the Java code into byte-code that can be run on the JVM.
+If we have multiple classes and folder, we have to package the compiled code into a common format (like a .jar file).
+Compilation and packaging by running the following command:
+	mvn compile
+	mvn package
+We can combine these two commands by running mvn package, since complie and package are part of the szme lifecycle, running mvn package will execute all lifecycle steps upto package, which include the compile step
+
+quang20@quang20:~/training/a-service/mvn-kafka$ mvn package
+[INFO] Scanning for projects...
+[INFO]
+[INFO] ------------------------< com.quangn:mvn-kafka >------------------------
+[INFO] Building mvn-kafka 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+
+quang20@quang20:~/training/a-service/mvn-kafka$ tree
+.
+├── pom.xml
+├── src
+│   ├── main
+│   │   └── java
+│   │       └── com
+│   │           └── quangn
+│   │               └── App.java
+│   └── test
+│       └── java
+│           └── com
+│               └── quangn
+│                   └── AppTest.java
+└── target
+    ├── classes
+    │   └── com
+    │       └── quangn
+    │           └── App.class
+    ├── generated-sources
+    │   └── annotations
+    ├── generated-test-sources
+    │   └── test-annotations
+    ├── maven-archiver
+    │   └── pom.properties
+    ├── maven-status
+    │   └── maven-compiler-plugin
+    │       ├── compile
+    │       │   └── default-compile
+    │       │       ├── createdFiles.lst
+    │       │       └── inputFiles.lst
+    │       └── testCompile
+    │           └── default-testCompile
+    │               ├── createdFiles.lst
+    │               └── inputFiles.lst
+    ├── mvn-kafka-1.0-SNAPSHOT.jar
+    ├── surefire-reports
+    │   ├── com.quangn.AppTest.txt
+    │   └── TEST-com.quangn.AppTest.xml
+    └── test-classes
+        └── com
+            └── quangn
+                └── AppTest.class
+28 directories, 13 files
+The JAR file is the final output that can be executed by the JVM. However, we still have to perform some additional steps before we can run our code.
+
+3. Running our Code
+We can use  the java command to execute out JAR file:
+quang20@quang20:~/training/a-service/mvn-kafka$ java -jar target/mvn-kafka-1.0-SNAPSHOT.jar
+no main manifest attribute, in target/mvn-kafka-1.0-SNAPSHOT.jar
+Get the below error, this is because the JAR file doesn't know the entry point, so it has no idea where the main method is.
+We can make use of the Maven JAR plugin, which gives us additional capabilities to build JAR files. 
+We can add the following configuration as a child of the <build> tag:
+
+4.Running Unit Tests
+Maven can also be used to run tests that we'vs defined in our project.
+By convention, all tests reside within the src/test directory
+For the purpose of illustration, let's create a static method to add two numbers in the App class:
+
+
+Maven - Introduction to the Build LifeCycle :
+---------------------------------------------
+1. Build Lifecycle Basics
+Maven is based around the central concept of a build lifecycle. What this means is that the process for building and distributing a particular artifact (project) is clearly defined.
+For the person building a project, this means that it is only nescessary to learn a small set of commands to build any Maven project, and the POM will ensure the yget the result they desired.
+There are three built-in lifecycles:
+	default: handle your project deployment.
+	clean: handle project cleaning.
+	site: handle the creation if your project's web site.
+1.1 A Build Lifecycle is Made Up of Phases
+A build phase represents a stage in the lifecycle
+The default lifecycle comprises of the following phases:
+	validate: valid the project is correct and all nescessary information is available.
+	compile: compile the source code.
+	test: test the compiled source code, the tests should not require the code be packaged or deployed.
+	package: take the compiled code and package it in its distributable format, such as a JAR.
+	verify: run any checks on results of intergration tests to ensure quality criteria are met
+	install: install the package into the local repository, for use as a dependency in other projects locally
+	deploy: done in the build environment, copies the final package to the remote repo for sharing with other devs/projects
+1.2 Usual Command Line Calls
+You should select the phase that matches your outcome.
+If you want your JAR, run package
+If you wnat to run the unit tests, run test.
+If you are uncertain what you want, the preferred phase to call is: mvn verify
+This executes each default lifecycle phase in order(validate, compile, package, etc)
+In a build environment, use the following call to cleanly build and deploy artifacts into the shared repo
+	mvn clean deploy
+
+How to create pom.xml:
+----------------------
+pom.xml
+
+Simple Kafka Producer client API JAVA :
+---------------------------------------
+1. Start Kafka cluster
+
+2. Kafka storage architechture
+Kafka tạo log file cho topic để lưu trữ msg, Log file này được partition, replicated và segmented thành nhiều phần khác nhau. 
