@@ -1,0 +1,92 @@
+kafka là gì ?
+-------------
+1. kafka được định nghĩa là một message broker chạy trên hệ thống phân tán.	
+bên public dữ liệu sẽ gọi là kafka producer 
+bên subscribe khi nhận dữ liệu theo topic thì sẽ gọi là consumer
+kafka có khả năng truyền tải đi một lượng lớn msg trong khoảng thời gian thực, nếu bên nhận chưa nhận được
+thì msg sẽ tự động lưu trữ vào hàng đợi và trên ỗ đĩa.
+đồng thời nó còn được replicate trong cluster để phòng ngừa việc mất đi dữ liệu.
+tính chất:
+	.High scalale: có khả năng mở rộng rất nhanh, dễ dàng với zero downtime, mn vẫn hđ bth khi thêm hoặc bớt broker
+	.High durable: msg được lưu trên disk, đảm bảo nếu mất điện, data vẫn còn nguyên, ngoài ra một msg sẽ có nhiều bản
+sao lưu trên nhiều broker khác nhau, phụ thuộc vào config và set up. Nếu một broker die, flow vẫn hđ bình thường ko bị ngắt quãng
+	.high reliable: giống durable, lưu trữ msg ở nhiều nơi, ngoài ra có cơ chế cân bằng request trong trường hợp gặp sự cố về
+các broker. Đại khái là đáng tin cậy hơn các msg broker hiện có trên thị trường.
+	.high performance: high throughput cho cả đầu gửi và nhận msg với khả năng scale, có thể xử lý hàng TB data. 
+
+
+Cách hoạt động của Kafka là gì?
+.xây dựng dựa vào mô hình sub/pub 
+
+Các khái niệm
+.producer: gửi msg vào topic
+.consumer: lấy msg từ topic đã subscribe
+.mesage sẽ được xác định bằng 3 yêu tố:
+	1. topic
+	2. partition
+	3. offset
+.topic: là một dãy các dữ liệu nối tiếp nhau, gồm một hoặc nhiều partition và msg được lưu trên các partition này.
+	khi tạo topic cần xác định số partition mong muốn
+.partition: được sắp xếp và bắt đầu từ 0
+.offset: các msg được lưu trữ trong partition cũng được sắp xếp theo thứ tự từ cũ đến mới, append liên tục và bắt đầu từ giá trị 0, đgl offset.
+
+Gửi và nhận msg:
+.leader partition concept:
+	-mỗi partition được replicate thành nhiều replication lưu trữ trên các broker khác nhau để đảm bảo
+	high reliable và high durable.
+	-leader flow: 
+		*chỉ định 1 replication bất kỳ làm leader, tại 1 thời điểm mỗi partition có duy nhất 1 replication leader
+		*chỉ có thể read/write từ replication leader
+		*các replication còn lại gọi là ISR (in-sync replica), đồng bộ msg từ replication leader
+		*mỗi partition có duy nhất 1 replication leader và 1 hoặc nhiều IRS
+	- ZooKeeper sẽ quyết định replication nào trở thành leader hay ISR 
+.Producer:
+	-là người gửi msg đến msg broker, hay write data vào partition của topic
+	-tự biết nên write vào broker vào và partition nào
+	-đang write mà gặp sự cố thì producer có cơ chế tự động retry cho đến khi thành công.
+	-có thể lựa chọn nhận ack từ kafka để chắc chắn msg đã được gửi thành công
+		*acks=0: fire-and-forget, gửi msg mà ko chờ phản hồi, có thể dẫn đến tình huống mất msg
+		*acks=1: default setting, producer chờ cho tới khi nhận được phản hồi từ replication leader
+		*acks=all: producer sẽ nhận đực phản hồi khi tất cả replication leader and IRS write data thành công
+	-message key: làm thế nào để điều hướng msg đến chính xác partition mình mong muốn để đảm bảo msg ordering 
+		*cách 1: thêm key cho msg, kafka sử dụng hash key partitioning để tìm partition cho msg, cùng key- cùng partition
+		*cách 2: hardcode, chỉ định partition cho msg 
+		*cách 3: tự define cơ chế partitioning, routing msg bằng cách implement interface partitioner
+	-nếu muốn các msg lq với nhau được gửi vào cùng partition và order theo thứ tự, cần define key cho mỗi msg
+		*key có thể bất kì loại dữ liệu nào
+		*key=null, msg được gửi đến broker/partition theo cơ chế round-robin (msg1 vào broker 101, msg2 vào broker 102..)
+		*key!=null, tất cả các msg có cùng key sẽ đi vào cùng broker/partition
+.Consumer:
+	-là đầu nhận msg, đọc msg từ topic, xác định bằng topic name
+	-đọc msg trong 1 partition diễn ra tuần tự để đảm bảo msg ordering, consumer ko thể đọc smg offset=3, khi chưa đọc msg offset=2
+	-một consumer cũng có thể đọc msg từ một hoặc nhiều hoặc tất cả partition trong 1 topic
+	-consumer group: 
+		*để giải quyết vấn đề bottle-neck khi số lượng producer tăng lên và đồng thời gửi msg đến tất cả partition.
+		*1 consumer có thể nhận msg từ nhiều partition, nhưng 1 partition ko thể gửi msg cho nhiều consumer trong cùng 1 consumer group
+
+Apache Kafka consumer offset, Broker discovery và Zookeeper
+1.consumer offset
+.để consume lại các msg đã xử lý, hoặc tiếp tục xử lý các msg chưa được xử lý trong topic, consumer cần biết
+offset chính xác vị trí của msg cần đọc. 
+.khi consumer xử lý xong msg, chúng ta nên 
+	-commit giá trị offset, các giá trị này sẽ lưu lại kafka topic có tên là: _consumer_offsets
+	-để consumer gặp sự cố và khởi động lại sau đó hoặc consumer khác thay thế, nó có thể tiếp tục từ msg cuối cùng được xử lý, ko đọc lại toàn bộ msg
+.có 3 tình huống khi consumer commit offset
+	-at most once: consumer commit offset ngay khi nhận được msg, 
+		*ko thể consumer lại msg khi đang xử lý msg mà consumer gặp sự cố
+	-at least once: consumer commit offset sau khi xử lý xong msg, 
+		*tình huống: khi processing cần gọi đến bên thứ 3 để xử lý, bên t3 xác nhận trừ tiền thành công, nhưng bên này bị lỗi, phải consume lại msg để xử lý và tiếp tục trừ tiền
+		*idempotent: là những xử lý có thể lặp lại nhiều lần mà ko ảnh hướng đến hệ thống.
+	-exactly once: chỉ xuất hiện trong case msg được transfer từ kafka sang kafka
+
+2. Kafka broker discovery 
+.mỗi broker có thông tin về các broker, topic, partition của kafka cluster đgl metadata.
+.priciple :
+	1.client connect đến broker 102, và request metadata
+	2.broker 102 trả về thông tin metadata và danh sách toàn bộ các broker hiện có trong mạng kafka cluster
+	3.sau khi có thông tin của toàn bộ broker và metadata, client sẽ qđ connect tới broker nào để produce hoặc consume msg
+3. zookeeper
+
+	
+References:
+https://viblo.asia/p/002-apache-kafka-topic-partition-offset-va-broker-m68Z0eEMlkG

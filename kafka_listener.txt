@@ -1,0 +1,36 @@
+Kafka Listenses- Explained :
+----------------------------
+You need to set advertised.listeners (or KAFKA_ADVERTISED_LISTENERS if you're using Docker images) to the external address (host/IP) so that clients can correctly can correctly connect to it. Otherwise they'll try to connect to the internal host address-and if that's not reachavle then problems ensue.
+	.LISTENERS are what interfaces Kafka binds to
+	.ADVERTISED_LISTENERS are how clients can connect
+
+Is anyone listening?
+When a client(producer/consumer) starts, it will request metadata about which broker is the leader for a partition. 
+The metadata returned will include the endpoints available for the leader broker for that partition, and the client will then use those endpoints to connect to the broker to read/wrtie data as required
+
+Let's assume you have more than one network. This could be things like:
+	1. docker internal network(s) plus host machine
+	2. brokers in the cloud, and on-permises machines locally
+You need to tell Kafka how the brokers can reach each other, but also make sure that external clients(producers/consumers) can reach the broker they need to.
+The key thing is that when you run a client, the broker you pass to it is just where it's going to go and get the metadata about brokers in the cluster from. 
+The actual host and IP that it will connect to for reading/writing data is based on the data that the broker passes back in the initial connection- even if it's just a single node and the broker returned is the same as the one connected to. 
+
+For configuring this correctly, you ned to understand that Kafka brokers can have multiple listeners. A listeners is a combination of:
+	1. Host/IP
+	2. Port 
+	3. Protocol
+Let's check out some config. Often the protocol is used for the listener name too, but here let's make it nice and clear by using abstract names for the listeners:
+	KAFKA_LISTENERS: LISTENER_BOB://kafka0:29092,LISTENER_FRED://localhost:9092
+	KAFKA_ADVERTISED_LISTENERS: LISTENER_BOB://kafka0:29092,LISTENER_FRED://localhost:9092
+	KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_BOB:PLAINTEXT,LISTENER_FRED:PLAINTEXT
+	KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_BOB
+KAFKA_LISTENERS: is a comma-separated list of listeners, and the host/ip and port to which kafka binds to on which to listen, default is 0.0.0.0
+KAFKA_ADVERTISED_LISTENERS: This is the metadata that's passwd back to clients
+KAFKA_INTER_BROKER_LISTENER_NAME: define key-value pairs for the security protocol to use per listener name
+
+Notice: kafkacat
+
+Why can I connect to the broker, but the client still fails?
+
+
+

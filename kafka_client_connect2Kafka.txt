@@ -1,0 +1,41 @@
+Client Connect to My Apache Kafka Cluster:
+------------------------------------------
+Intro:
+When a client wants to send or receive a message from Apache Kafka, there are two types of connection that must succeed:
+	1. The initial connection to a broker (the bootstrap), this returns metadata to the client, including a list of all the borkers in the cluster and their connection endpoints.
+	2. The client then connects to one (or more) of the brokers returned in the first step as required. If the broker has not been configured correctly, the connections will fail.
+The bocker details returned in step 1 are defined by the advertised.listeners setting of the broker(s) and must be resolvable and accessible from the client machine.
+
+An illustrated example of a Kafka client connecting to a Broker:
+We have 2 servers
+	1. client
+	2. Kafka cluster's single broker
+1. the client initates a connection to the bootstrap server(s), which is one (or more) of the brokers on the cluster.
+2. the broker returns metadata, which includes the host and port on which all the brokers in the cluster can be reached.
+3. this list is what the client then uses for all subsequent connections to produce or consum data.The address used in the initial connection is simply for the client to find a boostrap server on the cluster of n brokers, from which the client is then given a current list of all the brokers. This way, the client doesn't have to know at all times the list of all the brokers. The reason the client needs the details of all the brokers is that it will connect directly to one or more of the borkers based on which has data for the topic partition with which it wants to interact.
+
+What often goes wrong is that the broker is misconfigured and returns an address (the advertised.listener) on which the client cannot correctly to the broker. 
+
+Scenario 0: Client and Kafka running on the same local machine
+
+Scenario 1: Client and Kafka running on the different machines
+Notice: server.properties
+change from
+advertised.listeners=PLAINTEXT://localhost:9092
+listeners=PLAINTEXT://0.0.0.0:9092
+to
+advertised.listeners=PLAINTEXT://asgard03.moffatt.me:9092
+listeners=PLAINTEXT://0.0.0.0:9092
+
+Scenario 2: Kafka and client running in Docker
+Since the Kafka broker’s name on the network is broker (inherited from its container name), we need to set this as its advertised listener and change:
+from 
+    -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+to 
+     -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:9092 \
+
+Scenario 2: Kafka in Docker Compose
+
+
+
+	
