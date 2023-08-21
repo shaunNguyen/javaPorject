@@ -6,3 +6,6 @@ https://www.notion.so/26cfab2ca8634199802ffd34f3bcadbe?v=b0245c208c46479cac3dfef
 
 # Overview Kafka including: overview, setup 
 https://www.notion.so/Kafka-Overview-06aa29b2c4ec4426b0a6c9e9b5b8da93?pvs=4
+
+# Overview MongoDB including: overview, setup
+https://www.notion.so/MongoDB-Overview-4aea2eeb64d840929b6b95d54a3de62c?pvs=4
